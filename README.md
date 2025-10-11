@@ -111,6 +111,7 @@ Al modificar el servicio:
 
 ---
 
-**Última actualización:** Octubre 2025
+
+
 
 
