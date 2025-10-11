@@ -1,0 +1,28 @@
+{
+  "name": "love4pets-websocket",
+  "version": "1.0.0",
+  "description": "WebSocket server for Love4Pets real-time features",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts"
+  },
+  
+  "devDependencies": {
+    "@types/express": "^4.17.17",
+    "@types/node": "^20.4.5",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
+  },
+  "optionalDependencies": {},
+  "dependencies": {
+    "socket.io": "^4.7.2",
+    "express": "^4.18.2",
+    "better-sqlite3": "^8.3.0",
+    "zod": "^3.22.4"
+  },
+  "keywords": ["websocket", "socket.io", "real-time", "pets", "adoption"],
+  "author": "justinz12xd",
+  "license": "MIT"
+}
