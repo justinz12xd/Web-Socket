@@ -1,5 +1,6 @@
 // Servidor WebSocket + API HTTP para Love4Pets
 // Comentarios y documentación en español para facilitar la comprensión.
+//Uso del framework Socket.io
 
 import express from 'express';
 import http from 'http';
@@ -137,3 +138,4 @@ function capitalize(s: string) { if (!s) return s; return s[0].toUpperCase() + s
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
 server.listen(PORT, () => console.log(`WebSocket server running on port ${PORT}`));
+
