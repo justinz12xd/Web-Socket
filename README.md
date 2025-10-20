@@ -45,6 +45,39 @@ npm run build
 npm start
 ```
 
+# Arquitectura del Servidor
+
+El servidor sigue una arquitectura modular que permite una fácil escalabilidad y mantenimiento del código. A continuación se detalla la estructura de directorios y tecnologías utilizadas.
+
+## Estructura de Directorios
+
+```plaintext
+/src
+ ├─ /controllers  # Lógica de negocio para HTTP y WS
+ ├─ /routes       # Endpoints HTTP
+ ├─ /sockets      # Eventos Socket.IO
+ ├─ /models       # Modelos y tipos TypeScript
+ └─ index.ts      # Entry point del servidor
+Tecnologías Utilizadas
+Express: Manejo de rutas HTTP y middleware.
+Socket.IO: Comunicación en tiempo real entre cliente y servidor.
+TypeScript: Tipado seguro y escalabilidad del código.
+Descripción de Componentes
+/controllers
+Contiene la lógica de negocio que maneja las solicitudes HTTP y WebSocket.
+
+/routes
+Define los endpoints HTTP disponibles para la interacción con el servidor.
+
+/sockets
+Maneja los eventos de Socket.IO para permitir la comunicación en tiempo real.
+
+/models
+Define los modelos y tipos utilizados en la aplicación, asegurando la integridad de los datos.
+
+index.ts
+El punto de entrada del servidor, donde se inicializan las configuraciones y se inician los servicios.
+
 El servidor por defecto escucha en el puerto 4000 (puedes cambiarlo con la variable `PORT`).
 
 ## 🔗 Endpoints HTTP principales
@@ -110,6 +143,7 @@ Al modificar el servicio:
 4. Documenta cambios en este README.
 
 ---
+
 
 
 
