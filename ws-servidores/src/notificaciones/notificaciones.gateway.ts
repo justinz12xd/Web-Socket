@@ -10,6 +10,8 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { createAdapter } from '@socket.io/redis-adapter';
+import { createClient } from 'redis';
 
 /**
  * NotificationsGateway
@@ -29,8 +31,24 @@ export class NotificationsGateway implements OnGatewayInit, OnGatewayConnection,
   @WebSocketServer() server: Server;
 
   // Called when the gateway is initialized by Nest
-  afterInit() {
+  async afterInit() {
     console.log('[WS] NotificationsGateway initialized');
+
+    // Si se proporciona REDIS_URL, configuramos el adapter para scale-out
+    const redisUrl = process.env.REDIS_URL;
+    if (redisUrl) {
+      try {
+        const pubClient = createClient({ url: redisUrl });
+        const subClient = pubClient.duplicate();
+        await pubClient.connect();
+        await subClient.connect();
+        // @ts-ignore - socket.io types aceptan adapter
+        this.server.adapter(createAdapter(pubClient, subClient));
+        console.log('[WS] Redis adapter configured for socket.io');
+      } catch (err) {
+        console.warn('[WS] Failed to configure Redis adapter:', err);
+      }
+    }
   }
 
   // Nuevo cliente conectado al namespace /notifications
@@ -49,12 +67,16 @@ export class NotificationsGateway implements OnGatewayInit, OnGatewayConnection,
   // ------------------------------------------------------------------
   // Emite un evento a todos los clientes conectados en el namespace
   emitToAll(event: string, payload: any) {
+    // Emitir evento específico
     this.server.emit(event, payload);
+    // Emitir evento genérico 'notification' con metadatos para frontend
+    this.server.emit('notification', { type: event, payload });
   }
 
   // Emite un evento solo a los clientes que están en la "room" especificada
   emitToRoom(room: string, event: string, payload: any) {
     this.server.to(room).emit(event, payload);
+    this.server.to(room).emit('notification', { type: event, payload, target: { room } });
   }
 
   // API pública WebSocket: handlers que el cliente puede invocar

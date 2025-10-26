@@ -46,4 +46,12 @@ export class NotificationsService {
       this.gateway.emitToAll(eventName, payload);
     }
   }
+
+  /**
+   * Alias por claridad: emite una notificación (igual que broadcastEvent)
+   * Mantiene compatibilidad con llamadas existentes.
+   */
+  emitNotification(evt: DomainEvent) {
+    return this.broadcastEvent(evt);
+  }
 }
