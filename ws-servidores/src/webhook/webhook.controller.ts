@@ -35,13 +35,13 @@ function verifySignature(body: any, signature?: string) {
  * un servicio escrito en Rust). Valida la firma (opcional) y delega en
  * NotificationsService para emitir via WebSocket a los clientes.
  */
-@Controller()
+@Controller('webhooks')
 export class WebhookController {
   constructor(private readonly notifications: NotificationsService) {}
 
   // Aceptamos ambos endpoints por compatibilidad: /webhooks/notify y /webhook/notify
-  @Post('webhooks/notify')
-  @Post('webhook/notify')
+  // Usamos un único endpoint canónico: POST /webhooks/notify
+  @Post('notify')
   @HttpCode(200)
   async notify(
     @Body() body: IncomingEventDto,
