@@ -35,27 +35,43 @@ function verifySignature(body: any, signature?: string) {
  * un servicio escrito en Rust). Valida la firma (opcional) y delega en
  * NotificationsService para emitir via WebSocket a los clientes.
  */
-@Controller('webhooks')
+@Controller()
 export class WebhookController {
   constructor(private readonly notifications: NotificationsService) {}
 
-  @Post('notify')
+  // Aceptamos ambos endpoints por compatibilidad: /webhooks/notify y /webhook/notify
+  @Post('webhooks/notify')
+  @Post('webhook/notify')
   @HttpCode(200)
   async notify(
     @Body() body: IncomingEventDto,
     @Headers('x-signature') signature?: string,
   ) {
-    // Seguridad: solo aceptamos eventos firmados por el backend Rust
+    console.log('[WEBHOOK] recibido:', body?.type || 'tipo-desconocido');
+
+    // Seguridad: verificar firma HMAC (deshabilitado en dev)
     const ok = verifySignature(body, signature);
     if (!ok) {
-      throw new UnauthorizedException('Invalid signature');
+      throw new UnauthorizedException('Firma inválida');
     }
 
-    // Si pasa la firma, disparamos el evento en tiempo real
-    // El servicio decide si emitir a una room o a todos
+    // 1) Emitir el evento original. El servicio decide room vs broadcast.
     this.notifications.broadcastEvent({
       type: body.type,
       payload: body.payload,
+      target: body.target,
+    });
+
+    // 2) Emitir una segunda notificación genérica con metadatos para frontend
+    // Esto permite que los clientes que solo escuchan 'notification' reciban
+    // un resumen consistente del evento.
+    this.notifications.broadcastEvent({
+      type: 'notification',
+      payload: {
+        origin: 'webhook',
+        originalType: body.type,
+        data: body.payload,
+      },
       target: body.target,
     });
 
