@@ -17,15 +17,21 @@ import { IncomingEventDto } from '../notificaciones/dto/incoming-event.dto';
  * facilitar el desarrollo local.
  */
 function verifySignature(body: any, signature?: string) {
-  // const secret = process.env.WEBHOOK_SECRET;
-  // if (!secret) return false;
+  const secret = process.env.WEBHOOK_SECRET;
+  if (!secret) {
+    // En entornos de desarrollo permitimos la recepción sin firma, pero lo
+    // dejamos registrado en logs para que el operador lo vea.
+    console.warn('[WEBHOOK] WEBHOOK_SECRET no configurado — aceptando payload sin verificar (solo dev)');
+    return true;
+  }
 
-  // const expected = createHmac('sha256', secret)
-  //   .update(JSON.stringify(body))
-  //   .digest('hex');
+  if (!signature) return false;
 
-  // return signature === expected;
-  return true; // Temporalmente deshabilitado para desarrollo
+  const expected = createHmac('sha256', secret)
+    .update(JSON.stringify(body))
+    .digest('hex');
+
+  return signature === expected;
 }
 
 /**
