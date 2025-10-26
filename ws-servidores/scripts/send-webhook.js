@@ -20,14 +20,14 @@ async function send() {
   };
 
   try {
-    console.log('[webhook] posting to', URL, 'body:', body);
+    console.log('[webhook] enviando POST a', URL, 'cuerpo:', body);
     const res = await axios.post(URL, body, { headers: { 'Content-Type': 'application/json' } });
-    console.log('[webhook] response status:', res.status, 'data:', res.data);
+    console.log('[webhook] estado de respuesta:', res.status, 'data:', res.data);
   } catch (err) {
     if (err.response) {
-      console.error('[webhook] error response:', err.response.status, err.response.data);
+      console.error('[webhook] respuesta de error:', err.response.status, err.response.data);
     } else {
-      console.error('[webhook] error:', err.message);
+      console.error('[webhook] Error:', err.message);
     }
     process.exit(1);
   }

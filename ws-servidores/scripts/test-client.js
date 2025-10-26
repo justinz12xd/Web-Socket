@@ -15,22 +15,22 @@ console.log(`Conectando a ${url} ...`);
 const socket = io(url, { transports: ['websocket'] });
 
 socket.on('connect', () => {
-  console.log('[client] connected', socket.id);
-  console.log(`[client] joining room ${ROOM}`);
+  console.log('[cliente] conectado', socket.id);
+  console.log(`[cliente] entrando en la sala ${ROOM}`);
   socket.emit('joinRoom', ROOM);
 });
 
 socket.on('disconnect', () => {
-  console.log('[client] disconnected');
+  console.log('[cliente] desconectado');
 });
 
 socket.on(EVENT, (payload) => {
-  console.log(`[client] received event ${EVENT}:`, payload);
+  console.log(`[cliente] evento recibido ${EVENT}:`, payload);
 });
 
 // También escuchar evento genérico 'notification'
 socket.on('notification', (payload) => {
-  console.log('[client] received notification:', payload);
+  console.log('[cliente] notificación recibida:', payload);
 });
 
 // Mantener vivo

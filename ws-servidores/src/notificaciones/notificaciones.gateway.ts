@@ -32,7 +32,7 @@ export class NotificationsGateway implements OnGatewayInit, OnGatewayConnection,
 
   // Called when the gateway is initialized by Nest
   async afterInit() {
-    console.log('[WS] NotificationsGateway initialized');
+  console.log('[WS] Gateway de notificaciones inicializado');
 
     // Si se proporciona REDIS_URL, configuramos el adapter para scale-out
     const redisUrl = process.env.REDIS_URL;
@@ -44,9 +44,9 @@ export class NotificationsGateway implements OnGatewayInit, OnGatewayConnection,
         await subClient.connect();
         // @ts-ignore - socket.io types aceptan adapter
         this.server.adapter(createAdapter(pubClient, subClient));
-        console.log('[WS] Redis adapter configured for socket.io');
+        console.log('[WS] Adapter Redis configurado para socket.io');
       } catch (err) {
-        console.warn('[WS] Failed to configure Redis adapter:', err);
+        console.warn('[WS] No se pudo configurar el adapter Redis:', err);
       }
     }
   }
@@ -54,12 +54,12 @@ export class NotificationsGateway implements OnGatewayInit, OnGatewayConnection,
   // Nuevo cliente conectado al namespace /notifications
   // Aquí se puede validar client.handshake.auth?.token si usas autenticación
   handleConnection(client: Socket) {
-    console.log('[WS] Client connected:', client.id);
+  console.log('[WS] Cliente conectado:', client.id);
   }
 
   // Cliente desconectado
   handleDisconnect(client: Socket) {
-    console.log('[WS] Client disconnected:', client.id);
+  console.log('[WS] Cliente desconectado:', client.id);
   }
 
   // ------------------------------------------------------------------
@@ -84,13 +84,13 @@ export class NotificationsGateway implements OnGatewayInit, OnGatewayConnection,
   @SubscribeMessage('joinRoom')
   handleJoinRoom(@ConnectedSocket() client: Socket, @MessageBody() room: string) {
     client.join(room);
-    console.log(`[WS] ${client.id} joined room ${room}`);
+  console.log(`[WS] ${client.id} se unió a la sala ${room}`);
   }
 
   // - 'leaveRoom': salir de una sala
   @SubscribeMessage('leaveRoom')
   handleLeaveRoom(@ConnectedSocket() client: Socket, @MessageBody() room: string) {
     client.leave(room);
-    console.log(`[WS] ${client.id} left room ${room}`);
+    console.log(`[WS] ${client.id} salió de la sala ${room}`);
   }
 }

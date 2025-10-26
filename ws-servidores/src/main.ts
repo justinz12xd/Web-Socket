@@ -30,13 +30,13 @@ async function bootstrap() {
   for (let i = 0; i < maxAttempts; i++) {
     const port = startPort + i;
     try {
-      await app.listen(port);
-      console.log(`[BOOT] realtime-service running on http://localhost:${port}`);
+  await app.listen(port);
+  console.log(`[BOOT] servicio en tiempo real escuchando en http://localhost:${port}`);
       return;
     } catch (err: any) {
       // Si el puerto está en uso, intentar diagnosticar / limpiar según configuración
       if (err && err.code === 'EADDRINUSE') {
-        console.warn(`[BOOT] port ${port} in use.`);
+        console.warn(`[BOOT] puerto ${port} en uso.`);
 
         // Si se solicita, intentar identificar y matar el proceso que usa el puerto.
         // Variable de entorno opcional: KILL_OCCUPYING_PORT=1
@@ -56,7 +56,7 @@ async function bootstrap() {
                 pid = parts[parts.length - 1];
               }
               if (pid) {
-                console.log(`[BOOT] Killing process ${pid} that occupies port ${port} (Windows)...`);
+                console.log(`[BOOT] Matando proceso ${pid} que ocupa el puerto ${port} (Windows)...`);
                 await exec(`taskkill /PID ${pid} /F`);
               }
             } else {
@@ -76,7 +76,7 @@ async function bootstrap() {
               }
 
               if (pid) {
-                console.log(`[BOOT] Killing process ${pid} that occupies port ${port} (unix)...`);
+                console.log(`[BOOT] Matando proceso ${pid} que ocupa el puerto ${port} (unix)...`);
                 await exec(`kill -9 ${pid}`);
               }
             }
@@ -87,14 +87,14 @@ async function bootstrap() {
             i = i - 1; // decrement so loop will try same port again
             continue;
           } catch (killErr) {
-            console.warn('[BOOT] Failed to kill occupying process:', killErr);
+            console.warn('[BOOT] No se pudo matar el proceso que ocupaba el puerto:', killErr);
             // If it's the last attempt, throw
             if (i === maxAttempts - 1) throw err;
             await new Promise((r) => setTimeout(r, 200));
             continue;
           }
         } else {
-          console.warn(`[BOOT] port ${port} in use, trying ${port + 1}... (set KILL_OCCUPYING_PORT=1 to attempt to free it)`);
+          console.warn(`[BOOT] puerto ${port} en uso, intentando ${port + 1}... (establece KILL_OCCUPYING_PORT=1 para intentar liberarlo)`);
           // Si es el último intento, volver a lanzar el error
           if (i === maxAttempts - 1) throw err;
           await new Promise((r) => setTimeout(r, 200));
@@ -108,6 +108,6 @@ async function bootstrap() {
 }
 
 bootstrap().catch((err) => {
-  console.error('[BOOT] Failed to start application:', err);
+  console.error('[BOOT] Error al iniciar la aplicación:', err);
   process.exit(1);
 });

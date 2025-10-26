@@ -18,4 +18,4 @@ export const env = {
 
 // Ejemplo de uso:
 // import { env } from './config/env.config';
-// console.log('PORT', env.PORT);
+// console.log('PUERTO', env.PORT);
