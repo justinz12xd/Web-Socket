@@ -30,8 +30,10 @@ async function bootstrap() {
   for (let i = 0; i < maxAttempts; i++) {
     const port = startPort + i;
     try {
-  await app.listen(port);
-  console.log(`[BOOT] servicio en tiempo real escuchando en http://localhost:${port}`);
+      await app.listen(port);
+      console.log(
+        `[BOOT] servicio en tiempo real escuchando en http://localhost:${port}`,
+      );
       return;
     } catch (err: any) {
       // Si el puerto está en uso, intentar diagnosticar / limpiar según configuración
@@ -48,7 +50,9 @@ async function bootstrap() {
 
             if (platform === 'win32') {
               // netstat -ano | findstr :<port>
-              const { stdout } = await exec(`netstat -ano | findstr ":${port}"`);
+              const { stdout } = await exec(
+                `netstat -ano | findstr ":${port}"`,
+              );
               // stdout lines contain PID at the end
               const lines = stdout.trim().split(/\r?\n/).filter(Boolean);
               if (lines.length > 0) {
@@ -56,7 +60,9 @@ async function bootstrap() {
                 pid = parts[parts.length - 1];
               }
               if (pid) {
-                console.log(`[BOOT] Matando proceso ${pid} que ocupa el puerto ${port} (Windows)...`);
+                console.log(
+                  `[BOOT] Matando proceso ${pid} que ocupa el puerto ${port} (Windows)...`,
+                );
                 await exec(`taskkill /PID ${pid} /F`);
               }
             } else {
@@ -76,7 +82,9 @@ async function bootstrap() {
               }
 
               if (pid) {
-                console.log(`[BOOT] Matando proceso ${pid} que ocupa el puerto ${port} (unix)...`);
+                console.log(
+                  `[BOOT] Matando proceso ${pid} que ocupa el puerto ${port} (unix)...`,
+                );
                 await exec(`kill -9 ${pid}`);
               }
             }
@@ -87,14 +95,19 @@ async function bootstrap() {
             i = i - 1; // decrement so loop will try same port again
             continue;
           } catch (killErr) {
-            console.warn('[BOOT] No se pudo matar el proceso que ocupaba el puerto:', killErr);
+            console.warn(
+              '[BOOT] No se pudo matar el proceso que ocupaba el puerto:',
+              killErr,
+            );
             // If it's the last attempt, throw
             if (i === maxAttempts - 1) throw err;
             await new Promise((r) => setTimeout(r, 200));
             continue;
           }
         } else {
-          console.warn(`[BOOT] puerto ${port} en uso, intentando ${port + 1}... (establece KILL_OCCUPYING_PORT=1 para intentar liberarlo)`);
+          console.warn(
+            `[BOOT] puerto ${port} en uso, intentando ${port + 1}... (establece KILL_OCCUPYING_PORT=1 para intentar liberarlo)`,
+          );
           // Si es el último intento, volver a lanzar el error
           if (i === maxAttempts - 1) throw err;
           await new Promise((r) => setTimeout(r, 200));
