@@ -1,4 +1,3 @@
-// src/notificaciones/notificaciones.gateway.ts
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -10,87 +9,150 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { createAdapter } from '@socket.io/redis-adapter';
-import { createClient } from 'redis';
+import { Logger } from '@nestjs/common';
 
 /**
  * NotificationsGateway
  * --------------------
- * WebSocket gateway responsable de la comunicación en tiempo real.
- * - Namespace: /notifications
- * - Usa socket.io (a través de @nestjs/platform-socket.io)
+ * Gateway WebSocket para comunicación en tiempo real con clientes.
  *
- * API interna (para backend): emitToAll / emitToRoom
- * API pública (para clients): handlers 'joinRoom' y 'leaveRoom'
+ * Flujo de trabajo:
+ * 1. Backend REST (Rust) -> POST /webhooks/:entity -> WebhookController
+ * 2. WebhookController -> NotificationsService
+ * 3. NotificationsService -> NotificationsGateway (este archivo)
+ * 4. Gateway emite eventos -> Clientes conectados (Dashboard Frontend)
  *
- * Este gateway es llamado por `NotificationsService` para propagar
- * eventos que vienen desde el controlador REST (webhook).
+ * Namespace: /notifications
+ * Puerto: Heredado del servidor principal (default 4000)
+ *
+ * Eventos disponibles para clientes:
+ * - animal.created, animal.updated, animal.deleted
+ * - publicacion.created, publicacion.updated, publicacion.deleted
+ * - adopcion.created, adopcion.updated, adopcion.deleted
+ * - refugio.created, refugio.updated, refugio.deleted
+ * - campania.created, campania.updated, campania.deleted
  */
-@WebSocketGateway({ namespace: 'notifications', cors: { origin: process.env.CORS_ORIGIN || '*' } })
-export class NotificationsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer() server: Server;
+@WebSocketGateway({
+  namespace: 'notifications',
+  cors: {
+    origin: process.env.CORS_ORIGIN || '*',
+    credentials: true,
+  },
+})
+export class NotificationsGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
+  @WebSocketServer()
+  server: Server;
 
-  // Called when the gateway is initialized by Nest
-  async afterInit() {
-  console.log('[WS] Gateway de notificaciones inicializado');
+  private readonly logger = new Logger(NotificationsGateway.name);
+  private connectedClients = 0;
 
-    // Si se proporciona REDIS_URL, configuramos el adapter para scale-out
-    const redisUrl = process.env.REDIS_URL;
-    if (redisUrl) {
-      try {
-        const pubClient = createClient({ url: redisUrl });
-        const subClient = pubClient.duplicate();
-        await pubClient.connect();
-        await subClient.connect();
-        // @ts-ignore - socket.io types aceptan adapter
-        this.server.adapter(createAdapter(pubClient, subClient));
-        console.log('[WS] Adapter Redis configurado para socket.io');
-      } catch (err) {
-        console.warn('[WS] No se pudo configurar el adapter Redis:', err);
-      }
-    }
+  /**
+   * Hook ejecutado cuando el gateway es inicializado por NestJS
+   */
+  afterInit() {
+    this.logger.log('🚀 Gateway de notificaciones inicializado');
+    this.logger.log(`📡 Namespace: /notifications`);
+    this.logger.log(`🌐 CORS Origin: ${process.env.CORS_ORIGIN || '*'}`);
   }
 
-  // Nuevo cliente conectado al namespace /notifications
-  // Aquí se puede validar client.handshake.auth?.token si usas autenticación
+  /**
+   * Hook ejecutado cuando un nuevo cliente se conecta
+   * Aquí puedes implementar autenticación mediante tokens:
+   * const token = client.handshake.auth?.token;
+   */
   handleConnection(client: Socket) {
-  console.log('[WS] Cliente conectado:', client.id);
+    this.connectedClients++;
+    this.logger.log(
+      `✅ Cliente conectado: ${client.id} (Total: ${this.connectedClients})`,
+    );
+
+    // Enviar mensaje de bienvenida al cliente
+    client.emit('connection-success', {
+      message: 'Conectado al servidor WebSocket',
+      clientId: client.id,
+      timestamp: new Date().toISOString(),
+    });
   }
 
-  // Cliente desconectado
+  /**
+   * Hook ejecutado cuando un cliente se desconecta
+   */
   handleDisconnect(client: Socket) {
-  console.log('[WS] Cliente desconectado:', client.id);
+    this.connectedClients--;
+    this.logger.log(
+      `❌ Cliente desconectado: ${client.id} (Total: ${this.connectedClients})`,
+    );
   }
 
-  // ------------------------------------------------------------------
-  // API interna (usada por NotificationsService)
-  // ------------------------------------------------------------------
-  // Emite un evento a todos los clientes conectados en el namespace
+  /**
+   * Emite un evento a todos los clientes conectados
+   * @param event Nombre del evento (ej: 'animal.created')
+   * @param payload Datos del evento
+   */
   emitToAll(event: string, payload: any) {
-    // Emitir evento específico
+    this.logger.debug(`📤 Emitiendo evento "${event}" a todos los clientes`);
     this.server.emit(event, payload);
-    // Emitir evento genérico 'notification' con metadatos para frontend
-    this.server.emit('notification', { type: event, payload });
   }
 
-  // Emite un evento solo a los clientes que están en la "room" especificada
+  /**
+   * Emite un evento solo a los clientes en una sala específica
+   * @param room Nombre de la sala
+   * @param event Nombre del evento
+   * @param payload Datos del evento
+   */
   emitToRoom(room: string, event: string, payload: any) {
+    this.logger.debug(`📤 Emitiendo evento "${event}" a la sala "${room}"`);
     this.server.to(room).emit(event, payload);
-    this.server.to(room).emit('notification', { type: event, payload, target: { room } });
   }
 
-  // API pública WebSocket: handlers que el cliente puede invocar
-  // - 'joinRoom': unir al socket a una sala específica
+  /**
+   * Handler para que los clientes se unan a una sala específica
+   * Útil para filtrar notificaciones por refugio, campaña, etc.
+   *
+   * Ejemplo desde el cliente:
+   * socket.emit('joinRoom', 'refugio:123');
+   */
   @SubscribeMessage('joinRoom')
-  handleJoinRoom(@ConnectedSocket() client: Socket, @MessageBody() room: string) {
+  handleJoinRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() room: string,
+  ) {
     client.join(room);
-  console.log(`[WS] ${client.id} se unió a la sala ${room}`);
+    this.logger.log(`👥 Cliente ${client.id} se unió a la sala "${room}"`);
+    client.emit('joined-room', { room, timestamp: new Date().toISOString() });
   }
 
-  // - 'leaveRoom': salir de una sala
+  /**
+   * Handler para que los clientes abandonen una sala
+   *
+   * Ejemplo desde el cliente:
+   * socket.emit('leaveRoom', 'refugio:123');
+   */
   @SubscribeMessage('leaveRoom')
-  handleLeaveRoom(@ConnectedSocket() client: Socket, @MessageBody() room: string) {
+  handleLeaveRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() room: string,
+  ) {
     client.leave(room);
-    console.log(`[WS] ${client.id} salió de la sala ${room}`);
+    this.logger.log(`👋 Cliente ${client.id} salió de la sala "${room}"`);
+    client.emit('left-room', { room, timestamp: new Date().toISOString() });
+  }
+
+  /**
+   * Handler de ping/pong para verificar la conexión
+   * El cliente puede enviar 'ping' y recibirá 'pong'
+   */
+  @SubscribeMessage('ping')
+  handlePing(@ConnectedSocket() client: Socket) {
+    client.emit('pong', { timestamp: new Date().toISOString() });
+  }
+
+  /**
+   * Obtiene el número de clientes conectados actualmente
+   */
+  getConnectedClientsCount(): number {
+    return this.connectedClients;
   }
 }

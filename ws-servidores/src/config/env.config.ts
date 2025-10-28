@@ -1,21 +1,29 @@
 /**
  * env.config.ts
  * -------------
- * Archivo de ejemplo para centralizar la lectura de variables de entorno.
- * Aquí puedes definir un objeto con las variables que tu aplicación usa y
- * convertir tipos, poner valores por defecto, etc.
- *
- * Este archivo está vacío por defecto en el repo. Añadelo si quieres usar
- * un lugar centralizado para las configuraciones.
+ * Configuración centralizada de variables de entorno
+ * Proporciona valores por defecto y conversión de tipos
  */
 
 export const env = {
-	PORT: process.env.PORT ? Number(process.env.PORT) : 4000,
-	CORS_ORIGIN: process.env.CORS_ORIGIN || '*',
-	WEBHOOK_SECRET: process.env.WEBHOOK_SECRET || undefined,
-	REDIS_URL: process.env.REDIS_URL || undefined,
-};
+  /** Puerto en el que escuchará el servidor WebSocket */
+  PORT: process.env.PORT ? Number(process.env.PORT) : 4000,
 
-// Ejemplo de uso:
-// import { env } from './config/env.config';
-// console.log('PUERTO', env.PORT);
+  /** Origen permitido para CORS. En producción, especifica el dominio exacto */
+  CORS_ORIGIN: process.env.CORS_ORIGIN || '*',
+
+  /**
+   * Secreto para verificar firmas HMAC de webhooks.
+   * Si no se configura, se aceptarán webhooks sin verificar (solo para desarrollo)
+   */
+  WEBHOOK_SECRET: process.env.WEBHOOK_SECRET || undefined,
+
+  /**
+   * Si está activado, intentará matar procesos que ocupen el puerto
+   * Solo para desarrollo local
+   */
+  KILL_OCCUPYING_PORT: process.env.KILL_OCCUPYING_PORT === '1',
+
+  /** Nivel de logging (desarrollo/producción) */
+  NODE_ENV: process.env.NODE_ENV || 'development',
+};

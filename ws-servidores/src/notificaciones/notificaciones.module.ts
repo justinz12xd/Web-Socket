@@ -1,6 +1,6 @@
-import { Module } from "@nestjs/common";
-import { NotificationsService } from "./notificationes.service";
-import { NotificationsGateway } from "./notificaciones.gateway";
+import { Module } from '@nestjs/common';
+import { NotificationsService } from './notificationes.service';
+import { NotificationsGateway } from './notificaciones.gateway';
 
 /**
  * NotificationsModule
