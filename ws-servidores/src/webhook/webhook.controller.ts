@@ -17,6 +17,7 @@ import {
   AdopcionDto,
   RefugioDto,
   CampaniaDto,
+  CausaUrgenteDto,
   WebhookEventDto,
   EventType,
 } from '../common/dto';
@@ -229,6 +230,40 @@ export class WebhookController {
         break;
       case EventType.CAMPANIA_DELETED:
         this.notifications.notifyCampaniaDeleted(campania.id_campania);
+        break;
+      default:
+        throw new BadRequestException(
+          `Tipo de evento no válido: ${event.type}`,
+        );
+    }
+
+    return { success: true, event: event.type };
+  }
+
+  // ============================================================================
+  // ENDPOINTS PARA CAUSAS URGENTES
+  // ============================================================================
+
+  @Post('causas_urgentes')
+  @HttpCode(200)
+  async handleCausaUrgenteEvent(
+    @Body() event: WebhookEventDto,
+    @Headers('x-signature') signature?: string,
+  ) {
+    this.validateSignature(event, signature);
+    this.logger.log(`📥 Evento recibido: ${event.type}`);
+
+    const causaUrgente = event.payload as CausaUrgenteDto;
+
+    switch (event.type) {
+      case EventType.CAUSA_URGENTE_CREATED:
+        this.notifications.notifyCausaUrgenteCreated(causaUrgente);
+        break;
+      case EventType.CAUSA_URGENTE_UPDATED:
+        this.notifications.notifyCausaUrgenteUpdated(causaUrgente);
+        break;
+      case EventType.CAUSA_URGENTE_DELETED:
+        this.notifications.notifyCausaUrgenteDeleted(causaUrgente.id_causa_urgente);
         break;
       default:
         throw new BadRequestException(

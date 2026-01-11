@@ -7,4 +7,5 @@ export * from './publicacion.dto';
 export * from './adopcion.dto';
 export * from './refugio.dto';
 export * from './campania.dto';
+export * from './causa-urgente.dto';
 export { WebhookEventDto, EventType } from './webhook-event.dto';

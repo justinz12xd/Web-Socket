@@ -4,6 +4,7 @@ import { PublicacionDto } from './publicacion.dto';
 import { AdopcionDto } from './adopcion.dto';
 import { RefugioDto } from './refugio.dto';
 import { CampaniaDto } from './campania.dto';
+import { CausaUrgenteDto } from './causa-urgente.dto';
 
 /**
  * Tipos de eventos que puede emitir el backend REST
@@ -33,6 +34,11 @@ export enum EventType {
   CAMPANIA_CREATED = 'campania.created',
   CAMPANIA_UPDATED = 'campania.updated',
   CAMPANIA_DELETED = 'campania.deleted',
+
+  // Eventos de Causa Urgente
+  CAUSA_URGENTE_CREATED = 'causa_urgente.created',
+  CAUSA_URGENTE_UPDATED = 'causa_urgente.updated',
+  CAUSA_URGENTE_DELETED = 'causa_urgente.deleted',
 }
 
 /**
@@ -49,6 +55,7 @@ export class WebhookEventDto {
     | AdopcionDto
     | RefugioDto
     | CampaniaDto
+    | CausaUrgenteDto
     | any;
 
   @IsOptional()

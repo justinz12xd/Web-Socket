@@ -6,6 +6,7 @@ import {
   AdopcionDto,
   RefugioDto,
   CampaniaDto,
+  CausaUrgenteDto,
   EventType,
 } from '../common/dto';
 
@@ -188,6 +189,41 @@ export class NotificationsService {
     this.logger.log(`📢 Campaña eliminada (ID: ${campaniaId})`);
     this.gateway.emitToAll(EventType.CAMPANIA_DELETED, {
       id_campania: campaniaId,
+    });
+  }
+
+  // ============================================================================
+  // MÉTODOS PARA CAUSAS URGENTES
+  // ============================================================================
+
+  /**
+   * Notifica la creación de una nueva causa urgente
+   * Este evento se emite a TODOS los clientes conectados para notificación emergente
+   */
+  notifyCausaUrgenteCreated(causaUrgente: CausaUrgenteDto) {
+    this.logger.log(
+      `🚨 Nueva causa urgente: ${causaUrgente.titulo} (ID: ${causaUrgente.id_causa_urgente})`,
+    );
+    this.gateway.emitToAll(EventType.CAUSA_URGENTE_CREATED, causaUrgente);
+  }
+
+  /**
+   * Notifica la actualización de una causa urgente
+   */
+  notifyCausaUrgenteUpdated(causaUrgente: CausaUrgenteDto) {
+    this.logger.log(
+      `🚨 Causa urgente actualizada: ${causaUrgente.titulo} (ID: ${causaUrgente.id_causa_urgente})`,
+    );
+    this.gateway.emitToAll(EventType.CAUSA_URGENTE_UPDATED, causaUrgente);
+  }
+
+  /**
+   * Notifica la eliminación de una causa urgente
+   */
+  notifyCausaUrgenteDeleted(causaUrgenteId: string) {
+    this.logger.log(`🚨 Causa urgente eliminada (ID: ${causaUrgenteId})`);
+    this.gateway.emitToAll(EventType.CAUSA_URGENTE_DELETED, {
+      id_causa_urgente: causaUrgenteId,
     });
   }
 
