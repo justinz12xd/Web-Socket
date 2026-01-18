@@ -1,6 +1,7 @@
 # 🔌 Servidor WebSocket - Love4Pets
 
 Servidor WebSocket con **NestJS** y **Socket.IO** que actúa como puente en tiempo real entre el backend REST (Rust) y el frontend (Dashboard).
+se actualiza tambien las referencias del repo
 
 ## 🎯 Descripción
 
